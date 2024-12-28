@@ -8,7 +8,8 @@ class MySyncConsumer(SyncConsumer):
         print("Websocket connect event",event)
         # print("Channel layer:",self.channel_layer)
         print("Channel name:",self.channel_name)
-        async_to_sync(self.channel_layer.group_add)("programmers",self.channel_name)
+        self.groupname = self.scope['url_route']['kwargs']['groupname']
+        async_to_sync(self.channel_layer.group_add)(self.groupname,self.channel_name)
         self.send({
             "type":"websocket.accept"
         })
@@ -16,7 +17,7 @@ class MySyncConsumer(SyncConsumer):
     def websocket_receive(self,event):
         # print("Websocket receive event",event)
         print('Message:',event['text'])
-        async_to_sync(self.channel_layer.group_send)("programmers",{
+        async_to_sync(self.channel_layer.group_send)(self.groupname,{
             "type":"chat.message",
             "message":event['text']
         }) 
@@ -33,14 +34,15 @@ class MySyncConsumer(SyncConsumer):
         print("Websocket disconnect event",event)
         print("Channel layer:",self.channel_layer)
         print("Channel name:",self.channel_name)
-        async_to_sync(self.channel_layer.group_discard)("programmers",self.channel_name)
+        async_to_sync(self.channel_layer.group_discard)(self.groupname,self.channel_name)
         raise StopConsumer()
         
 
 class MyAsyncConsumer(AsyncConsumer):
     async def websocket_connect(self,event):
         print("Websocket connect event",event)
-        await self.channel_layer.group_add("programmers",self.channel_name)
+        self.groupname = self.scope['url_route']['kwargs']['groupname']
+        await self.channel_layer.group_add(self.groupname,self.channel_name)
         await self.send({
             "type":"websocket.accept"
         })
@@ -48,7 +50,7 @@ class MyAsyncConsumer(AsyncConsumer):
     async def websocket_receive(self,event):    
         print("Websocket receive event",event)
         print('Message:',event['text'])
-        await self.channel_layer.group_send("programmers",{
+        await self.channel_layer.group_send(self.groupname,{
             "type":"chat.message",
             "message":event['text']
         })
@@ -65,5 +67,5 @@ class MyAsyncConsumer(AsyncConsumer):
         print("Websocket disconnect event",event)
         print("Channel layer:",self.channel_layer)
         print("Channel name:",self.channel_name)
-        await self.channel_layer.group_discard("programmers",self.channel_name)
+        await self.channel_layer.group_discard(self.groupname,self.channel_name)
         raise StopConsumer()

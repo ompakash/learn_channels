@@ -1,5 +1,5 @@
 from django.urls import path
 from myapp.views import index
 urlpatterns = [
-    path('index/', index),
+    path('<str:group_name>/', index),
 ]
