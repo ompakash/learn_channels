@@ -29,7 +29,7 @@
             console.log("Message received from server",event.data);
             const data = JSON.parse(event.data);
             console.log("Parsed data",data);
-            document.querySelector("#chat-log").value += data.msg + "\n";
+            document.querySelector("#chat-log").value += (data.user + " : " + data.msg + "\n");
         };
 
         ws.onclose = function() {
