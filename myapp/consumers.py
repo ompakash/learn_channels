@@ -3,6 +3,9 @@ from channels.exceptions import StopConsumer
 from time import sleep
 from asgiref.sync import async_to_sync
 import asyncio
+import json
+from myapp.models import Group,Chat
+from channels.db import database_sync_to_async
 class MySyncConsumer(SyncConsumer):
     def websocket_connect(self,event):
         print("Websocket connect event",event)
@@ -17,6 +20,13 @@ class MySyncConsumer(SyncConsumer):
     def websocket_receive(self,event):
         # print("Websocket receive event",event)
         print('Message:',event['text'])
+        data = json.loads(event['text'])
+        group = Group.objects.get(name=self.groupname)
+        chat = Chat(
+            content = data['msg'],
+            group = group
+        )
+        chat.save()
         async_to_sync(self.channel_layer.group_send)(self.groupname,{
             "type":"chat.message",
             "message":event['text']
@@ -50,6 +60,13 @@ class MyAsyncConsumer(AsyncConsumer):
     async def websocket_receive(self,event):    
         print("Websocket receive event",event)
         print('Message:',event['text'])
+        data = json.loads(event['text'])
+        group = await database_sync_to_async(Group.objects.get)(name=self.groupname)
+        chat = Chat(
+            content = data['msg'],
+            group = group
+        )
+        await database_sync_to_async(chat.save)()
         await self.channel_layer.group_send(self.groupname,{
             "type":"chat.message",
             "message":event['text']
